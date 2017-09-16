@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,9 @@ namespace WindowPainter.Pages
 
 	    public async Task<IActionResult> OnPostAsync(string title)
 	    {
-		    var painting = new Painting {Title = title};
+		    var data = new byte[40000];
+			Array.Fill(data, (byte)0xff);
+		    var painting = new Painting {Title = title, Data = data};
 		    db.Paintings.Add(painting);
 		    await db.SaveChangesAsync();
 		    return Redirect($"~/Canvas/{painting.Id}");

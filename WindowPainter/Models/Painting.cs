@@ -8,6 +8,8 @@ namespace WindowPainter.Models
 		public int Id { get; set; }
 		[Required]
 	    public string Title { get; set; }
+		[Required]
+		public byte[] Data { get; set; }
     }
 
 	public class PaintingMetadata

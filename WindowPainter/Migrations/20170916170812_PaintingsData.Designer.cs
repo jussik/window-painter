@@ -11,9 +11,10 @@ using WindowPainter.Services;
 namespace WindowPainter.Migrations
 {
     [DbContext(typeof(PainterDbContext))]
-    partial class PainterDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170916170812_PaintingsData")]
+    partial class PaintingsData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,8 +26,7 @@ namespace WindowPainter.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<byte[]>("Data")
-                        .IsRequired();
+                    b.Property<byte[]>("Data");
 
                     b.Property<string>("Title")
                         .IsRequired();

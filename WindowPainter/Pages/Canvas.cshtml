@@ -24,6 +24,14 @@
             <div class="navbar-item">
                 <a class="button is-primary is-small is-inverted">
                     <span class="icon is-small">
+                        <i class="fa fa-save"></i>
+                    </span>
+                    <span id="save">Save</span>
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="button is-primary is-small is-inverted">
+                    <span class="icon is-small">
                         <i class="fa fa-paint-brush"></i>
                     </span>
                     <span id="new-brush">New brush</span>
@@ -70,14 +78,21 @@
     var nav = document.getElementById("nav");
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
-    var image = new ImageData(100, 100);
-    var pixels = new Uint32Array(image.data.buffer);
-    for (var i = 0; i < 10000; i++) {
-        pixels[i] = colors.white;
+    var image;
+    var pixels;
+
+    function save() {
+        var req = new XMLHttpRequest();
+        req.open("PUT", "/api/paintings/@Model.Painting.Id", true);
+        req.setRequestHeader("Content-Type", "application/octet-stream");
+        req.send(image.data.buffer);
     }
+    document.getElementById("save").addEventListener("click", save, false);
 
     function draw() {
-        ctx.putImageData(image, 0, 0);
+        if(image != null) {
+            ctx.putImageData(image, 0, 0);
+        }
     }
 
     function resize(){
@@ -96,6 +111,15 @@
         window.requestAnimationFrame(resize);
     });
     resize();
+
+    fetch("/api/paintings/@Model.Painting.Id")
+        .then(res => res.arrayBuffer())
+        .then(arr => {
+            image = new ImageData(new Uint8ClampedArray(arr), 100, 100);
+            pixels = new Uint32Array(image.data.buffer);
+            draw();
+        })
+        .then(draw);
 
     window.paint = function (winX, winY, winWidth, winHeight, color) {
         var zoom = innerWidth / outerWidth;
@@ -123,5 +147,5 @@
             draw();
         }
     }
-})();
+    })();
 </script>
