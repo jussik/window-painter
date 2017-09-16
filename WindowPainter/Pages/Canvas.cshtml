@@ -1,0 +1,127 @@
+﻿@page "{id:int?}"
+@model WindowPainter.Pages.CanvasModel
+@{
+    Layout = "_Layout";
+    ViewBag.Title = Model.Painting.Title;
+}
+<style>
+    html { overflow: hidden; }
+    #canvas {
+        position: absolute;
+        box-shadow: 0 0 10px 0 rgba(0,0,0,0.5);
+        image-rendering: optimizeSpeed;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -o-crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: pixelated;
+        image-rendering: optimize-contrast;
+        -ms-interpolation-mode: nearest-neighbor;
+    }
+</style>
+<nav id="nav" class="navbar is-primary" role="navigation" aria-label="main navigation">
+    <div class="navbar-menu is-active">
+        <div class="navbar-start">
+            <div class="navbar-item">
+                <a class="button is-primary is-small is-inverted">
+                    <span class="icon is-small">
+                        <i class="fa fa-paint-brush"></i>
+                    </span>
+                    <span id="new-brush">New brush</span>
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="button is-danger is-small is-inverted">
+                    <span class="icon is-small">
+                        <i class="fa fa-times"></i>
+                    </span>
+                    <span id="close-brushes">Close all brushes</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+<canvas id="canvas"></canvas>
+<script>
+(() => {
+    var brushes = [];
+    function openBrush() {
+        var brush = window.open("/Brush", "_blank", "resizable,location=no,titlebar=no,top=" + (window.screenY + 100) + ",left=" + (window.screenX + 100) + ",width=200,height=200");
+        brush.onbeforeunload = () => {
+            var ix = brushes.indexOf(brush);
+            if (ix !== -1)
+                brushes.splice(ix, 1);
+        }
+        brushes.push(brush);
+    }
+    function closeAllBrushes() {
+        while (brushes.length) {
+            brushes.pop().close();
+        }
+    }
+    document.getElementById("new-brush").addEventListener("click", openBrush, false);
+    document.getElementById("close-brushes").addEventListener("click", closeAllBrushes, false);
+
+    var colors = {
+        black: 0xff000000,
+        white: 0xffffffff,
+        red: 0xff0000ff
+    }
+
+    var nav = document.getElementById("nav");
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    var image = new ImageData(100, 100);
+    var pixels = new Uint32Array(image.data.buffer);
+    for (var i = 0; i < 10000; i++) {
+        pixels[i] = colors.white;
+    }
+
+    function draw() {
+        ctx.putImageData(image, 0, 0);
+    }
+
+    function resize(){
+        var availableHeight = innerHeight - nav.clientHeight;
+        var size = Math.min(innerWidth, availableHeight) - 20;
+        canvas.style.top = nav.clientHeight + (availableHeight - size >> 1) + "px";
+        canvas.style.left = (innerWidth - size >> 1) + "px";
+        canvas.style.width = size + "px";
+        canvas.style.height = size + "px";
+        canvas.width = 100;
+        canvas.height = 100;
+
+        draw();
+    }
+    window.addEventListener("resize", () => {
+        window.requestAnimationFrame(resize);
+    });
+    resize();
+
+    window.paint = function (winX, winY, winWidth, winHeight, color) {
+        var zoom = innerWidth / outerWidth;
+        var left = (winX - screenX) * zoom;
+        var top = (winY - screenY) * zoom;
+        var width = winWidth * zoom;
+        var height = winHeight * zoom;
+        var canvasRect = canvas.getBoundingClientRect();
+        var minY = 100 * (top - canvasRect.top) / canvasRect.height >> 0;
+        var minX = 100 * (left - canvasRect.left) / canvasRect.width >> 0;
+        var maxY = minY + 100 * height / canvasRect.height >> 0;
+        var maxX = minX + 100 * width / canvasRect.width >> 0;
+        if (maxX >= 0 && minY < 100 && maxY >= 0 && minX < 100) {
+            var mMinY = Math.max(0, minY);
+            var mMinX = Math.max(0, minX);
+            var mMaxY = Math.min(99, maxY);
+            var mMaxX = Math.min(99, maxX);
+            var value = colors[color];
+            for (var y = mMinY; y <= mMaxY; y++) {
+                for (var x = mMinX; x <= mMaxX; x++) {
+                    pixels[x + 100 * y] = value;
+                }
+            }
+
+            draw();
+        }
+    }
+})();
+</script>

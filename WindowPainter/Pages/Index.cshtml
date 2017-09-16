@@ -1,0 +1,41 @@
+﻿@page
+@model WindowPainter.Pages.IndexModel
+@{ Layout = "_Layout"; }
+<section class="hero is-primary">
+    <div class="hero-body">
+        <div class="container">
+            <h1 class="title">Window Painter</h1>
+        </div>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="columns">
+            <div class="column">
+                <form action="/Canvas" method="post">
+                    @Html.AntiForgeryToken()
+                    <h2 class="subtitle">Create new painting:</h2>
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input type="text" name="title" placeholder="Title" required class="input" />
+                        </div>
+                        <div class="control">
+                            <button type="submit" class="button is-primary">Let's paint!</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="column">
+                <h2 class="subtitle">Active paintings:</h2>
+                @foreach (var painting in Model.Paintings)
+                {
+                    <a href="Canvas/@painting.Id">@painting.Title</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+    </div>
+</section>
