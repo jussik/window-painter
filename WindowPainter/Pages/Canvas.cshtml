@@ -109,7 +109,10 @@
     }
     function closeAllBrushes() {
         while (brushes.length) {
-            brushes.pop().close();
+            var brush = brushes.pop();
+            if(brush.win) {
+                brush.win.close();
+            }
         }
     }
     document.getElementById("new-brush").addEventListener("click", openBrush, false);
@@ -203,7 +206,6 @@
             shadow.style.top = top - 3 + "px";
             shadow.style.width = width + "px";
             shadow.style.height = height + "px";
-            console.log(shadow.style);
         }
 
         var canvasRect = canvas.getBoundingClientRect();
