@@ -17,6 +17,12 @@
         image-rendering: optimize-contrast;
         -ms-interpolation-mode: nearest-neighbor;
     }
+    .shadow {
+        position: absolute;
+        background-color: rgba(128, 128, 128, 0.75);
+        border: 3px solid black;
+        box-sizing: content-box;
+    }
 </style>
 <nav id="nav" class="navbar is-primary" role="navigation" aria-label="main navigation">
     <div class="navbar-menu is-active">
@@ -46,20 +52,60 @@
                 </a>
             </div>
         </div>
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <a class="button is-primary is-small is-inverted">
+                    <span class="icon is-small">
+                        <i class="fa fa-bullseye"></i>
+                    </span>
+                    <span id="calibrate">Calibrate brush</span>
+                </a>
+            </div>
+        </div>
     </div>
 </nav>
+<div class="modal" id="calibration-modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <div class="modal-card-head">
+            <h2 class="subtitle">Calibration</h2>
+        </div>
+        <div class="modal-card-body">
+            <div class="content">
+                <div style="position: relative; width: 240px; height: 240px; margin: 0 auto;">
+                    <div style="position: absolute;top: 20px; left: 20px; width: 200px; height: 200px; background-color: #ddd" id="offset-target"></div>
+                    <div style="position: absolute;top: 40px; left: 0; width: 240px; height: 160px; border-top: 2px solid black; border-bottom: 2px solid black"></div>
+                    <div style="position: absolute;top: 0; left: 40px; width: 160px; height: 240px; border-left: 2px solid black; border-right: 2px solid black"></div>
+                </div>
+                <p>Align the indicators in the popup with those on this page and click <strong>Done</strong> in the popup. You can use the arrow keys to move the popup small amounts.</p>
+            </div>
+        </div>
+        <div class="modal-card-foot" style="justify-content: flex-end;">
+            <button id="cancel-calibration" class="button">Cancel</button>
+        </div>
+    </div>
+</div>
 <canvas id="canvas"></canvas>
 <script>
 (() => {
     var brushes = [];
     function openBrush() {
-        var brush = window.open("/Brush", "_blank", "resizable,location=no,titlebar=no,top=" + (window.screenY + 100) + ",left=" + (window.screenX + 100) + ",width=200,height=200");
-        brush.onbeforeunload = () => {
-            var ix = brushes.indexOf(brush);
-            if (ix !== -1)
-                brushes.splice(ix, 1);
+        var brush = {};
+        var id = brushes.push(brush) - 1;
+        brush.win = window.open("/Brush?" + id,
+            "_blank",
+            "top=" + (window.screenY + 100) +
+            ",left=" + (window.screenX + 100) +
+            ",width=" + (200 * devicePixelRatio) +
+            ",height=" + (200 * devicePixelRatio));;
+        brush.shadow = document.createElement("div");
+        brush.shadow.classList.add("shadow");
+        document.body.appendChild(brush.shadow);
+        brush.win.onbeforeunload = () => {
+            brush.shadow.parentNode.removeChild(brush.shadow);
+            delete brush.win;
+            delete brush.shadow;
         }
-        brushes.push(brush);
     }
     function closeAllBrushes() {
         while (brushes.length) {
@@ -68,6 +114,31 @@
     }
     document.getElementById("new-brush").addEventListener("click", openBrush, false);
     document.getElementById("close-brushes").addEventListener("click", closeAllBrushes, false);
+
+    var offsetX = +localStorage.offsetX || 0;
+    var offsetY = +localStorage.offsetY || 0;
+    var offsetTarget = document.getElementById("offset-target");
+    window.applyOffsets = function (winX, winY) {
+        var offsetRect = offsetTarget.getBoundingClientRect();
+        offsetX = (winX - screenX) / devicePixelRatio - offsetRect.left;
+        offsetY = (winY - screenY) / devicePixelRatio - offsetRect.top;
+        localStorage.offsetX = offsetX;
+        localStorage.offsetY = offsetY;
+    }
+    var modal = document.getElementById("calibration-modal");
+    document.getElementById("calibrate").addEventListener("click", _ => {
+        modal.classList.add("is-active");
+        var calibrator = window.open("/Calibrator",
+            "_blank",
+            "top=" + (window.screenY + 100) +
+            ",left=" + (window.screenX + 100) +
+            ",width=" + (200 * devicePixelRatio) +
+            ",height=" + (200 * devicePixelRatio));
+        calibrator.onbeforeunload = () => {
+            modal.classList.remove("is-active");
+        }
+    }, false);
+    document.getElementById("cancel-calibration").addEventListener("click", _ => modal.classList.remove("is-active"), false);
 
     var colors = {
         black: 0xff000000,
@@ -121,12 +192,20 @@
         })
         .then(draw);
 
-    window.paint = function (winX, winY, winWidth, winHeight, color) {
-        var zoom = innerWidth / outerWidth;
-        var left = (winX - screenX) * zoom;
-        var top = (winY - screenY) * zoom;
-        var width = winWidth * zoom;
-        var height = winHeight * zoom;
+    window.paint = function (winX, winY, winWidth, winHeight, color, id) {
+        var left = (winX - screenX) / devicePixelRatio - offsetX;
+        var top = (winY - screenY) / devicePixelRatio - offsetY;
+        var width = winWidth;
+        var height = winHeight;
+        var shadow = brushes[id].shadow;
+        if(shadow != null) {
+            shadow.style.left = left - 3 + "px";
+            shadow.style.top = top - 3 + "px";
+            shadow.style.width = width + "px";
+            shadow.style.height = height + "px";
+            console.log(shadow.style);
+        }
+
         var canvasRect = canvas.getBoundingClientRect();
         var minY = 100 * (top - canvasRect.top) / canvasRect.height >> 0;
         var minX = 100 * (left - canvasRect.left) / canvasRect.width >> 0;
