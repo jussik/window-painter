@@ -1,26 +1,40 @@
-﻿window.opener.onbeforeunload = () => window.close();
-var id = +location.search.substr(1);
-var posX, posY;
-var color = "black";
-document.documentElement.style.background = color;
-document.documentElement.addEventListener("click", () => {
-    if (color === "black")
-        color = "red";
-    else color = "black";
-    document.documentElement.style.background = color;
-    paint();
-}, false);
-
-function paint() {
-    window.opener.paint(posX, posY, innerWidth, innerHeight, color, id);
-}
-
-function checkPos() {
-    if (posX !== screenX || posY !== screenY) {
-        posX = screenX;
-        posY = screenY;
-        paint();
+﻿class BrushPopup {
+    readonly brushId: number;
+    posX: number;
+    posY: number;
+    color: string;
+    constructor() {
+        this.brushId = +location.search.substr(1);
+        this.color = "black";
+        document.documentElement.style.background = this.color;
+        this.checkPos();
     }
-    window.requestAnimationFrame(checkPos);
+    paint() {
+        window.opener.paint(Object.assign({
+            winWidth: innerWidth,
+            winHeight: innerHeight
+        }, this));
+    }
+    switchColor() {
+        if (this.color === "black")
+            this.color = "red";
+        else this.color = "black";
+        document.documentElement.style.background = this.color;
+        this.paint();
+    }
+    enqueueCheck() {
+        window.requestAnimationFrame(() => this.checkPos());
+    }
+    checkPos() {
+        if (this.posX !== screenX || this.posY !== screenY) {
+            this.posX = screenX;
+            this.posY = screenY;
+            this.paint();
+        }
+        this.enqueueCheck();
+    }
 }
-window.requestAnimationFrame(checkPos);
+
+const popup = new BrushPopup();
+document.documentElement.addEventListener("click", () => popup.switchColor(), false);
+window.opener.onbeforeunload = () => window.close();
