@@ -26,8 +26,8 @@ class Brush {
         }
     }
     close() {
-        if (this.shadow && this.shadow.parentNode) {
-            this.shadow.parentNode.removeChild(this.shadow);
+        if (this.shadow) {
+            document.body.removeChild(this.shadow);
         }
         delete this.shadow;
 
@@ -146,14 +146,14 @@ class Canvas {
         this.ctx.putImageData(this.image, 0, 0);
     }
     onResize() {
-        const availableHeight = innerHeight - nav.clientHeight;
+        const topOffset = this.getTopOffset();
+        const availableHeight = innerHeight - topOffset;
         const size = Math.min(innerWidth, availableHeight) - 20;
-        Object.assign(this.canvas.style, {
-            top: nav.clientHeight + (availableHeight - size >> 1) + "px",
-            left: (innerWidth - size >> 1) + "px",
-            width: size + "px",
-            height: size + "px"
-        });
+        const style = this.canvas.style;
+        style.top = topOffset + (availableHeight - size >> 1) + "px";
+        style.left = (innerWidth - size >> 1) + "px";
+        style.width = size + "px";
+        style.height = size + "px";
         this.draw();
     }
     paint(p: PaintRequest) {
@@ -162,13 +162,11 @@ class Canvas {
         const width = p.winWidth;
         const height = p.winHeight;
         if (Utils.drawShadows) {
-            const shadow = brushContainer.get(p.brushId).shadow;
-            if (shadow != null) {
-                shadow.style.left = left - 3 + "px";
-                shadow.style.top = top - 3 + "px";
-                shadow.style.width = width + "px";
-                shadow.style.height = height + "px";
-            }
+            const style = brushContainer.get(p.brushId).shadow.style;
+            style.left = left - 3 + "px";
+            style.top = top - 3 + "px";
+            style.width = width + "px";
+            style.height = height + "px";
         }
 
         const canvasRect = this.canvas.getBoundingClientRect();
