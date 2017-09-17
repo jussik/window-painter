@@ -32,6 +32,7 @@ namespace WindowPainter
                 app.UseDeveloperExceptionPage();
             }
 
+	        app.UseStaticFiles();
 	        app.UseSignalR(routes =>
 	        {
 		        routes.MapHub<PainterHub>("hub");

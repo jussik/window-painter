@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brush</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.5.2/css/bulma.min.css">
+    <style>
+        html {
+            overflow: hidden;
+            background-color: #ddd;
+        }
+        .center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+<div style="position: absolute;top: 20px; left: 0; width: 200px; height: 160px; border-top: 2px solid black; border-bottom: 2px solid black"></div>
+<div style="position: absolute;top: 0; left: 20px; width: 160px; height: 200px; border-left: 2px solid black; border-right: 2px solid black"></div>
+<div class="center">
+    <button class="button" id="done-button">Done</button>
+</div>
+<script src="calibrator.js"></script>
+</body>
+</html>
